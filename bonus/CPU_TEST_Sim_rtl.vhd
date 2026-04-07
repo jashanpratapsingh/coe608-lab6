@@ -21,7 +21,7 @@ entity CPU_TEST_Sim_rtl is
         HEX7     : out std_logic_vector(6 downto 0);
 
         LCD_RS   : out std_logic;
-        LCD_RW   : out std_logic;
+        LCD_RW   : buffer std_logic;
         LCD_EN   : out std_logic;
         LCD_ON   : out std_logic;
         LCD_DATA : inout std_logic_vector(7 downto 0)
