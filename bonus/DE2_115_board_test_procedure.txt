@@ -4,7 +4,8 @@ DE2-115 Bonus CPU Bring-Up Procedure
 Project files
 - Project: CPU_TEST_Sim_DE2_115.qpf
 - Revision: CPU_TEST_Sim_DE2_115
-- Top-level: CPU_TEST_Sim.bdf
+- Top-level (compile): CPU_TEST_Sim.vhd -> CPU_TEST_Sim_rtl (+ cpu_run_clock, board_hex_out)
+- Block diagram: CPU_TEST_Sim.bdf (legacy flat schematic; see banner in file)
 - Memory image: system_memory.mif
 
 1) Build/Compile
@@ -35,16 +36,16 @@ Pass conditions:
   * LCD controller is always enabled in this revision
 
 Expected:
-- HEX0 shows numeric T_info state (0..7), HEX1..HEX7 are forced to 0
+- HEX0 shows numeric T_info (0..7); HEX1..HEX5 show blank (0); HEX6/HEX7 show PC[7:0] as two hex digits
 - LEDR[9..8] and LEDG[7..0] are not stuck
 - LCD backlight/control active (LCD_ON high, LCD_EN toggling)
 
 4) Execution Checks (Current Memory Program)
 --------------------------------------------
-- With SW[0] = 0, confirm CPU state is held (HEX/LCD stable)
-- Set SW[0] = 1 to run CPU continuously from CLOCK_50
+- With SW[0] = 0, confirm CPU state is held (HEX/LCD stable; PC display on HEX6/HEX7 stops advancing)
+- Set SW[0] = 1 to run the CPU on a slow divided clock (~2 Hz) for visible stepping
 - Observe LCD line 1 shows A value updates and line 2 shows B value updates
-- Observe T_info state transitions on HEX0 while running
+- Observe T_info on HEX0 and PC low byte on HEX6/HEX7 while running
 
 5) Bonus Program Demonstration Flow
 -----------------------------------
