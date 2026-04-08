@@ -1,0 +1,33 @@
+WIDTH=32;
+DEPTH=64;
+
+ADDRESS_RADIX=HEX;
+DATA_RADIX=HEX;
+
+-- Problem 1 bonus: IF(a==b) branch1; else if(a>b) branch2; else continue;
+-- Registers: A = a, B = b. After SUB, BEQ then BGU (opcode 0xB) then JMP.
+-- Signatures: branch1 -> A=0x1111, branch2 -> A=0x2222, continue -> A=0x3333
+-- Demo: a=5, b=3 -> branch2 (A=0x2222). a=4,b=4 -> branch1; a=2,b=9 -> continue.
+-- To build: copy this file over system_memory.mif, then compile.
+
+CONTENT BEGIN
+	00  :   00000005;  -- LDAI 5   ; a
+	01  :   10000003;  -- LDBI 3   ; b
+	02  :   72000000;  -- SUB
+	03  :   60000010;  -- BEQ 0x10
+	04  :   B0000014;  -- BGU 0x14
+	05  :   50000018;  -- JMP 0x18
+	[06..0F]  :   5000001C;
+
+	10  :   00001111;
+	11  :   5000001C;
+
+	14  :   00002222;
+	15  :   5000001C;
+
+	18  :   00003333;
+	19  :   5000001C;
+
+	1C  :   5000001C;
+	[1D..3F]  :   00000000;
+END;

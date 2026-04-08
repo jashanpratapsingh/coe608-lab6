@@ -6,8 +6,8 @@ Project files
 - Revision: CPU_TEST_Sim_DE2_115
 - Top-level (compile): CPU_TEST_Sim.vhd -> CPU_TEST_Sim_rtl (+ cpu_run_clock, board_hex_out)
 - Block diagram: CPU_TEST_Sim.bdf (legacy flat schematic; see banner in file)
-- Memory image: system_memory.mif (Problem 1 default)
-- Alternate image: system_memory_problem2.mif (Problem 2; copy over system_memory.mif or replace file before compile)
+- Memory image: system_memory.mif (Problem 2 default — for-loop / power product)
+- Alternate image: system_memory_problem1.mif (Problem 1 if/else-if/else; copy over system_memory.mif before compile)
 
 1) Build/Compile
 ----------------
@@ -41,34 +41,37 @@ Expected:
 - LEDR[9..8] and LEDG[7..0] are not stuck
 - LCD backlight/control active (LCD_ON high, LCD_EN toggling)
 
-4) Execution Checks (Current Memory Program)
---------------------------------------------
-- With SW[0] = 0, confirm CPU state is held (HEX/LCD stable; PC display on HEX6/HEX7 stops advancing)
+4) Execution Checks (Problem 2 — current default program)
+-----------------------------------------------------------
+This build runs Problem 2: a=1, then fifteen ROL (one-bit left shift) steps equivalent to
+  for(i=1; i<6; i++) a = a * 2^i
+Final A = 0x00008000 (32768 = 2^15). Program halts with JMP @ word address 0x10.
+
+- With SW[0] = 0, confirm CPU state is held (HEX/LCD stable; PC on HEX6/HEX7 stops advancing)
 - Set SW[0] = 1 to run the CPU on a slow divided clock (~2 Hz) for visible stepping
-- Observe LCD line 1 shows A value updates and line 2 shows B value updates
-- Observe T_info on HEX0 and PC low byte on HEX6/HEX7 while running
+- Observe LCD line 1 (A) step through shifts until it reaches 0x00008000, then hold
+- LCD line 2 (B) is unchanged unless the program writes B (this image does not)
+- When halted, HEX6/HEX7 low byte of PC should show 0x10
 
 5) Bonus Program Demonstration Flow
 -----------------------------------
-For each required lab bonus program:
-- Use the correct MIF (system_memory.mif for Problem 1, or system_memory_problem2.mif copied over it for Problem 2)
-- Recompile
-- Reprogram board
-- Run this sequence:
+
+Problem 2 (default — system_memory.mif)
+- Recompile as above, program board, reset (KEY[0]), run (SW[0]=1)
+- Expected signature: LCD line 1 final A = 0x00008000; PC low byte 0x10 at halt
+- Repeat reset-run three times; pass if A and PC signature match every time
+
+Problem 1 (alternate — system_memory_problem1.mif)
+- Copy system_memory_problem1.mif over system_memory.mif (or replace contents), recompile, reprogram
+- Flow: LDAI a, LDBI b, SUB, BEQ branch1, BGU branch2, JMP continue. BGU opcode nibble 0xB.
+- Default demo (a=5, b=3): final A = 0x00002222. a=4,b=4 -> 0x1111; a=2,b=9 -> 0x3333 (edit words 0x00/0x01)
+- Halt merge at PC 0x1C (self-JMP)
+
+General demo sequence (both problems):
   a) Assert reset with KEY[0] press
   b) Release reset
-  c) Let CPU run/step according to your demo method
-  d) Capture final visible result signature (HEX/LCD/LED)
-
-Problem 1 (if / else-if / else) — image: system_memory.mif
-- Flow: LDAI a, LDBI b, SUB, BEQ branch1, BGU branch2, JMP continue. BGU opcode nibble 0xB (branch if unsigned a>b after SUB: Z=0 and C=1).
-- Default demo (a=5, b=3): LCD line 1 final A = 0x00002222 (branch2). B = 3 until overwritten.
-- Other tests: change words at 0x00/0x01 — a=4,b=4 -> A = 0x00001111 (branch1); a=2,b=9 -> A = 0x00003333 (continue / else).
-- After branching, program merges to PC 0x1C self-JMP; PC low byte on HEX6/HEX7 settles with low byte 0x1C.
-
-Problem 2 (for-loop power product) — image: system_memory_problem2.mif
-- Equivalent to a=1 then fifteen ROL (one-bit left shift) steps; final A = 0x00008000 (32768 = 2^15).
-- LCD line 1 should show 0x00008000 at idle on halt at PC 0x10 (HEX6/HEX7 show low byte 0x10).
+  c) Set SW[0] = 1 to run / observe
+  d) Capture final LCD/HEX signature
 
 6) Stability Check
 ------------------
